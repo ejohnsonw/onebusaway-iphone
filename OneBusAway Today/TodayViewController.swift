@@ -27,6 +27,8 @@ class TodayViewController: OBAStaticTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        self.extensionContext?.widgetLargestAvailableDisplayMode = .expanded
+
         self.emptyDataSetVerticalOffset = 0
         self.emptyDataSetTitle = NSLocalizedString("today_screen.no_data_title", comment: "No Bookmarks - empty data set title.")
         self.emptyDataSetDescription = NSLocalizedString("today_screen.no_data_description", comment: "Add bookmarks to Today Screen Bookmarks to see them here. - empty data set description.")
@@ -37,6 +39,7 @@ class TodayViewController: OBAStaticTableViewController {
     }
 }
 
+// MARK: - Widget Protocol
 extension TodayViewController: NCWidgetProviding {
     func widgetPerformUpdate(completionHandler: (@escaping (NCUpdateResult) -> Void)) {
         self.group = app.modelDao.todayBookmarkGroup
@@ -51,6 +54,16 @@ extension TodayViewController: NCWidgetProviding {
 
         let promises: [Promise<Any>] = self.group.bookmarks.flatMap { self.promiseStop(bookmark: $0) }
         _ = when(resolved: promises).then { _ in completionHandler(NCUpdateResult.newData) }
+    }
+
+    func widgetActiveDisplayModeDidChange(_ activeDisplayMode: NCWidgetDisplayMode, withMaximumSize maxSize: CGSize) {
+        if activeDisplayMode == .expanded {
+            // abxoxo - todo: calculate real height of table!
+            preferredContentSize = CGSize(width: 0, height: 280)
+        }
+        else {
+            preferredContentSize = maxSize
+        }
     }
 }
 
@@ -87,21 +100,23 @@ extension TodayViewController {
     }
 
     func populateRow(_ row: OBABookmarkedRouteRow, targetURL: URL, routeName: String, departures: [OBAArrivalAndDepartureV2]) {
+        row.attributedTopLine = NSAttributedString.init(string: row.bookmark.name)
+
         if departures.count > 0 {
-            row.supplementaryMessage = nil
+            row.errorMessage = nil
             let arrivalDeparture = departures[0]
-            row.routeName = arrivalDeparture.bestAvailableName
-            row.destination = arrivalDeparture.tripHeadsign
-            
-            if let statusText = OBADepartureCellHelpers.statusText(forArrivalAndDeparture: arrivalDeparture) {
-                row.statusText = statusText
+
+            row.upcomingDepartures = OBAUpcomingDeparture.upcomingDepartures(fromArrivalsAndDepartures: departures)
+
+            if let statusText = OBADepartureCellHelpers.statusText(forArrivalAndDeparture: arrivalDeparture),
+               let upcoming = row.upcomingDepartures?.first {
+                row.attributedMiddleLine = OBADepartureCellHelpers.attributedDepartureTime(withStatusText: statusText, upcomingDeparture: upcoming)
             }
         }
         else {
-            row.supplementaryMessage = String.init(format: NSLocalizedString("text_no_departure_next_time_minutes_params", comment: ""), routeName, String(kMinutes))
+            // abxoxo - todo!
+//            row.middleLine = String.init(format: NSLocalizedString("text_no_departure_next_time_minutes_params", comment: ""), routeName, String(kMinutes))
         }
-        
-        row.upcomingDepartures = OBAUpcomingDeparture.upcomingDepartures(fromArrivalsAndDepartures: departures)
 
         row.action = { _ in
             self.extensionContext?.open(targetURL, completionHandler: nil)
@@ -137,7 +152,7 @@ extension TodayViewController {
         }.catch { error in
             row.upcomingDepartures = nil
             row.state = .error
-            row.supplementaryMessage = error.localizedDescription
+            row.errorMessage = error.localizedDescription
         }.always {
             self.replaceRow(at: indexPath, with: row)
             self.tableView.reloadRows(at: [indexPath], with: .none)

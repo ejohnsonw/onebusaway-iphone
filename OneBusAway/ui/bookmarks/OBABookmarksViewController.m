@@ -13,6 +13,14 @@
 #import "OBABookmarkGroupsViewController.h"
 #import "OBASegmentedRow.h"
 #import "OBANavigationTitleView.h"
+#import "ISHHoverBar.h"
+#import "UIViewController+OBAAdditions.h"
+@import Masonry;
+
+typedef NS_ENUM(NSUInteger, OBABookmarkSort) {
+    OBABookmarkSortGroup = 0,
+    OBABookmarkSortProximity,
+};
 
 static NSTimeInterval const kRefreshTimerInterval = 30.0;
 static NSUInteger const kMinutes = 60;
@@ -20,6 +28,7 @@ static NSUInteger const kMinutes = 60;
 static NSString * const OBABookmarkSortUserDefaultsKey = @"OBABookmarkSortUserDefaultsKey";
 
 @interface OBABookmarksViewController ()
+@property(nonatomic,strong) ISHHoverBar *sortHoverBar;
 @property(nonatomic,strong) NSHashTable *pendingPromises;
 @property(nonatomic,strong) NSTimer *refreshBookmarksTimer;
 @property(nonatomic,strong) NSMutableDictionary<OBABookmarkV2*,NSArray<OBAArrivalAndDepartureV2*>*> *bookmarksAndDepartures;
@@ -63,6 +72,8 @@ static NSString * const OBABookmarkSortUserDefaultsKey = @"OBABookmarkSortUserDe
 
     self.navigationItem.leftBarButtonItem = self.editButtonItem;
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"msg_groups", @"") style:UIBarButtonItemStylePlain target:self action:@selector(editGroups)];
+
+    [self createSortHoverBar];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -191,10 +202,10 @@ static NSString * const OBABookmarkSortUserDefaultsKey = @"OBABookmarkSortUserDe
         BOOL missingRealTimeData = [OBAArrivalAndDepartureV2 hasScheduledDepartures:matchingDepartures];
 
         if (matchingDepartures.count > 0) {
-            row.supplementaryMessage = nil;
+            row.errorMessage = nil;
         }
         else {
-            row.supplementaryMessage = [NSString stringWithFormat:NSLocalizedString(@"text_no_departure_next_time_minutes_params", @""), bookmark.routeShortName, @(kMinutes)];
+            row.errorMessage = [NSString stringWithFormat:NSLocalizedString(@"text_no_departure_next_time_minutes_params", @""), bookmark.routeShortName, @(kMinutes)];
         }
 
         // This will result in some 'false positive' instances where the
@@ -212,7 +223,7 @@ static NSString * const OBABookmarkSortUserDefaultsKey = @"OBABookmarkSortUserDe
         DDLogError(@"Failed to load departure for bookmark: %@", error);
         row.upcomingDepartures = nil;
         row.state = OBABookmarkedRouteRowStateError;
-        row.supplementaryMessage = [error localizedDescription];
+        row.errorMessage = [error localizedDescription];
     }).always(^{
         NSIndexPath *indexPath = [self indexPathForModel:bookmark];
 
@@ -538,6 +549,58 @@ static NSString * const OBABookmarkSortUserDefaultsKey = @"OBABookmarkSortUserDe
     return YES;
 }
 
+#pragma mark - Sort UI
+
+- (IBAction)showSortPopover {
+    OBATableSection *section = [[OBATableSection alloc] initWithTitle:nil];
+
+    NSString *sortGroup = NSLocalizedString(@"bookmarks_controller.sort_by_group_item", @"Segmented control item title: 'Sort by Group'");
+    OBATableRow *groupRow = [[OBATableRow alloc] initWithTitle:sortGroup action:^(OBABaseRow *row) {
+        [OBAApplication.sharedApplication.userDefaults setInteger:OBABookmarkSortGroup forKey:OBABookmarkSortUserDefaultsKey];
+        [self loadDataWithTableReload:YES];
+    }];
+
+    NSString *sortProximity = NSLocalizedString(@"bookmarks_controller.sort_by_proximity_item", @"Segmented control item title: 'Sort by Proximity'");
+    OBATableRow *proximityRow = [[OBATableRow alloc] initWithTitle:sortProximity action:^(OBABaseRow *row) {
+        [OBAApplication.sharedApplication.userDefaults setInteger:OBABookmarkSortProximity forKey:OBABookmarkSortUserDefaultsKey];
+        [self loadDataWithTableReload:YES];
+    }];
+
+    OBABookmarkSort sort = [OBAApplication.sharedApplication.userDefaults integerForKey:OBABookmarkSortUserDefaultsKey];
+
+    if (sort == OBABookmarkSortGroup) {
+        groupRow.accessoryType = UITableViewCellAccessoryCheckmark;
+    }
+    else if (sort == OBABookmarkSortProximity) {
+        proximityRow.accessoryType = UITableViewCellAccessoryCheckmark;
+    }
+
+    [section addRow:groupRow];
+    [section addRow:proximityRow];
+
+    PickerViewController *picker = [[PickerViewController alloc] init];
+    picker.sections = @[section];
+
+    [self oba_presentPopoverViewController:picker fromView:self.sortHoverBar];
+}
+
+- (void)createSortHoverBar {
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+    button.imageEdgeInsets = UIEdgeInsetsMake(8, 8, 8, 8);
+    button.tintColor = [UIColor blackColor];
+    [button setImage:[UIImage imageNamed:@"sort-amount-desc"] forState:UIControlStateNormal];
+    [button addTarget:self action:@selector(showSortPopover) forControlEvents:UIControlEventTouchUpInside];
+    UIBarButtonItem *sortButton = [[UIBarButtonItem alloc] initWithCustomView:button];
+
+    self.sortHoverBar = [[ISHHoverBar alloc] init];
+    self.sortHoverBar.items = @[sortButton];
+    [self.view addSubview:self.sortHoverBar];
+    [self.sortHoverBar mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.bottom.equalTo(self.mas_bottomLayoutGuideTop).offset(-OBATheme.defaultMargin);
+        make.trailing.equalTo(self).offset(-OBATheme.defaultMargin);
+    }];
+}
+
 #pragma mark - Row Builders
 
 /**
@@ -583,9 +646,9 @@ static NSString * const OBABookmarkSortUserDefaultsKey = @"OBABookmarkSortUserDe
     if (!arrivalAndDeparture) {
         return;
     }
-    row.routeName = arrivalAndDeparture.bestAvailableName;
-    row.destination = arrivalAndDeparture.tripHeadsign;
-    row.statusText = [OBADepartureCellHelpers statusTextForArrivalAndDeparture:arrivalAndDeparture];
+    row.attributedTopLine = [[NSAttributedString alloc] initWithString:row.bookmark.name];
+    row.attributedMiddleLine = [OBADepartureRow buildAttributedRoute:arrivalAndDeparture.bestAvailableName destination:arrivalAndDeparture.tripHeadsign];
+    row.attributedBottomLine = [OBADepartureCellHelpers attributedDepartureTimeWithStatusText:[OBADepartureCellHelpers statusTextForArrivalAndDeparture:arrivalAndDeparture] upcomingDeparture:[OBAUpcomingDeparture upcomingDeparturesFromArrivalsAndDepartures:@[arrivalAndDeparture]].firstObject];
 }
 
 - (void)performCommonBookmarkRowConfiguration:(OBABaseRow*)row forBookmark:(OBABookmarkV2*)bookmark {

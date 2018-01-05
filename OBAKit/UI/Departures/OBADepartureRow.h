@@ -13,14 +13,20 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OBADepartureRow : OBABaseRow
-@property(nonatomic,copy,nullable) NSString *destination;
+
+// abxoxo - next up, start using topLine and get rid of the one-off version in the bookmark controller!
+
+@property(nonatomic,copy,nullable) NSAttributedString *attributedTopLine;
+@property(nonatomic,copy,nullable) NSAttributedString *attributedMiddleLine;
+@property(nonatomic,copy,nullable) NSAttributedString *attributedBottomLine;
+
 @property(nonatomic,copy,nullable) NSArray<OBAUpcomingDeparture*> *upcomingDepartures;
-@property(nonatomic,copy,nullable) NSString *statusText;
-@property(nonatomic,copy) NSString *routeName;
 @property(nonatomic,copy,nullable) void (^showAlertController)(UIView *presentingView);
 @property(nonatomic,assign) BOOL bookmarkExists;
 @property(nonatomic,assign) BOOL alarmExists;
 @property(nonatomic,assign) BOOL hasArrived;
+
++ (NSAttributedString*)buildAttributedRoute:(NSString*)route destination:(nullable NSString*)destination;
 @end
 
 NS_ASSUME_NONNULL_END
