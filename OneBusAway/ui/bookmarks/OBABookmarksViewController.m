@@ -11,7 +11,6 @@
 #import "OBAEditStopBookmarkViewController.h"
 #import "OBACollapsingHeaderView.h"
 #import "OBABookmarkGroupsViewController.h"
-#import "OBASegmentedRow.h"
 #import "OBANavigationTitleView.h"
 #import "ISHHoverBar.h"
 #import "UIViewController+OBAAdditions.h"
@@ -272,8 +271,6 @@ static NSString * const OBABookmarkSortUserDefaultsKey = @"OBABookmarkSortUserDe
     // If there are no bookmarks anywhere in the system, ungrouped or otherwise, then skip
     // over this code and instead show the empty table message.
     if (self.modelDAO.bookmarkGroups.count != 0 || self.modelDAO.ungroupedBookmarks.count != 0) {
-        [sections addObject:[self buildSegmentedControlSection]];
-
         if ([OBABookmarksViewController sortBookmarksByProximity]) {
             OBATableSection *section = [self proximitySortedTableSection];
 
@@ -307,23 +304,6 @@ static NSString * const OBABookmarkSortUserDefaultsKey = @"OBABookmarkSortUserDe
     [sections addObject:looseBookmarks];
 
     return [NSArray arrayWithArray:sections];
-}
-
-- (OBATableSection*)buildSegmentedControlSection {
-    OBASegmentedRow *segmentedControl = [[OBASegmentedRow alloc] initWithSelectionChange:^(NSUInteger selectedIndex) {
-        [OBAApplication.sharedApplication.userDefaults setInteger:selectedIndex forKey:OBABookmarkSortUserDefaultsKey];
-        [self loadDataWithTableReload:YES];
-    }];
-
-    segmentedControl.selectedItemIndex = [OBAApplication.sharedApplication.userDefaults integerForKey:OBABookmarkSortUserDefaultsKey];
-
-    NSString *sortGroup = NSLocalizedString(@"bookmarks_controller.sort_by_group_item", @"Segmented control item title: 'Sort by Group'");
-    NSString *sortProximity = NSLocalizedString(@"bookmarks_controller.sort_by_proximity_item", @"Segmented control item title: 'Sort by Proximity'");
-    segmentedControl.items = @[sortGroup, sortProximity];
-
-    OBATableSection *segmentedControlSection = [[OBATableSection alloc] initWithTitle:nil rows:@[segmentedControl]];
-
-    return segmentedControlSection;
 }
 
 + (BOOL)sortBookmarksByProximity {
