@@ -27,10 +27,6 @@
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
 
     if (self) {
-        self.contentView.clipsToBounds = YES;
-        self.contentView.frame = self.bounds;
-        self.contentView.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight;
-
         _departureView = [[OBAClassicDepartureView alloc] initWithFrame:CGRectZero];
         _departureView.contextMenuButton.hidden = YES;
         [self.contentView addSubview:_departureView];

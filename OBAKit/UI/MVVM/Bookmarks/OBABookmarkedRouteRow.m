@@ -8,7 +8,12 @@
 
 #import <OBAKit/OBABookmarkedRouteRow.h>
 #import <OBAKit/OBABookmarkedRouteCell.h>
+#import <OBAKit/OBABookmarkedRouteLoadingCell.h>
+#import <OBAKit/OBABookmarkedRouteErrorCell.h>
 #import <OBAKit/OBAViewModelRegistry.h>
+
+static NSString * const OBABookmarkedRouteReuseIdentifierLoading = @"OBABookmarkedRouteReuseIdentifierLoading";
+static NSString * const OBABookmarkedRouteReuseIdentifierError = @"OBABookmarkedRouteReuseIdentifierError";
 
 @implementation OBABookmarkedRouteRow
 
@@ -40,6 +45,20 @@
 
 + (void)registerViewsWithTableView:(UITableView *)tableView {
     [tableView registerClass:[OBABookmarkedRouteCell class] forCellReuseIdentifier:[self cellReuseIdentifier]];
+    [tableView registerClass:[OBABookmarkedRouteLoadingCell class] forCellReuseIdentifier:OBABookmarkedRouteReuseIdentifierLoading];
+    [tableView registerClass:[OBABookmarkedRouteErrorCell class] forCellReuseIdentifier:OBABookmarkedRouteReuseIdentifierError];
+}
+
+- (NSString*)cellReuseIdentifier {
+    if (self.upcomingDepartures.count > 0) {
+        return [self.class cellReuseIdentifier];
+    }
+    else if (self.state == OBABookmarkedRouteRowStateLoading) {
+        return OBABookmarkedRouteReuseIdentifierLoading;
+    }
+    else {
+        return OBABookmarkedRouteReuseIdentifierError;
+    }
 }
 
 @end

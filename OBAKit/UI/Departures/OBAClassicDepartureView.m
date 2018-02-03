@@ -148,31 +148,6 @@
     [self applyUpcomingDeparture:[self departureRow].upcomingDepartures atIndex:0 toLabel:self.firstDepartureLabel];
     [self applyUpcomingDeparture:[self departureRow].upcomingDepartures atIndex:1 toLabel:self.secondDepartureLabel];
     [self applyUpcomingDeparture:[self departureRow].upcomingDepartures atIndex:2 toLabel:self.thirdDepartureLabel];
-
-    if ([_departureRow isKindOfClass:OBABookmarkedRouteRow.class]) {
-        [self loadStateFromBookmarkedRouteRow:(OBABookmarkedRouteRow*)_departureRow];
-    }
-}
-
-- (void)loadStateFromBookmarkedRouteRow:(OBABookmarkedRouteRow*)bookmarkRow {
-    if (bookmarkRow.state == OBABookmarkedRouteRowStateLoading) {
-
-        return;
-    }
-//
-//    if ([self tableDataRow].upcomingDepartures.count > 0) {
-//        self.activityIndicatorView.hidden = YES;
-//        [self.activityIndicatorView stopAnimating];
-//    }
-//    else if ([self tableDataRow].state == OBABookmarkedRouteRowStateLoading) {
-//        [self.activityIndicatorView startAnimating];
-//        self.activityIndicatorView.hidden = NO;
-//    }
-//    else { // error state.
-//        self.activityIndicatorView.hidden = NO;
-//        [self.activityIndicatorView stopAnimating];
-//        self.activityIndicatorView.textLabel.text = [self tableDataRow].errorMessage;
-//    }
 }
 
 - (void)applyUpcomingDeparture:(NSArray<OBAUpcomingDeparture*>*)upcomingDepartures atIndex:(NSUInteger)index toLabel:(OBADepartureTimeLabel*)departureTimeLabel {
