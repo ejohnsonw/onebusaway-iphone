@@ -60,7 +60,7 @@
     }
     _tableRow = [tableRow copy];
 
-    self.topLabel.attributedText = self.tableDataRow.attributedTopLine;
+    self.topLabel.attributedText = self.tableDataRow.attributedTopLine ?: self.tableDataRow.attributedMiddleLine;
 }
 
 - (OBABookmarkedRouteRow*)tableDataRow {

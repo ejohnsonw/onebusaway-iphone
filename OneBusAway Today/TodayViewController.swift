@@ -81,7 +81,10 @@ extension TodayViewController {
                 }
             }
             else {
-                row = OBABookmarkedRouteRow.init(bookmark: bookmark, action: nil)
+                let routeRow = OBABookmarkedRouteRow.init(bookmark: bookmark, action: nil)
+                routeRow.attributedTopLine = NSAttributedString.init(string: bookmark.name)
+
+                row = routeRow
             }
 
             row.model = bookmark
@@ -100,8 +103,6 @@ extension TodayViewController {
     }
 
     func populateRow(_ row: OBABookmarkedRouteRow, targetURL: URL, routeName: String, departures: [OBAArrivalAndDepartureV2]) {
-        row.attributedTopLine = NSAttributedString.init(string: row.bookmark.name)
-
         if departures.count > 0 {
             row.errorMessage = nil
             let arrivalDeparture = departures[0]

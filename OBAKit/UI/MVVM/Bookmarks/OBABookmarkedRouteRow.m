@@ -11,6 +11,7 @@
 #import <OBAKit/OBABookmarkedRouteLoadingCell.h>
 #import <OBAKit/OBABookmarkedRouteErrorCell.h>
 #import <OBAKit/OBAViewModelRegistry.h>
+#import <OBAKit/NSObject+OBADescription.h>
 
 static NSString * const OBABookmarkedRouteReuseIdentifierLoading = @"OBABookmarkedRouteReuseIdentifierLoading";
 static NSString * const OBABookmarkedRouteReuseIdentifierError = @"OBABookmarkedRouteReuseIdentifierError";
@@ -59,6 +60,10 @@ static NSString * const OBABookmarkedRouteReuseIdentifierError = @"OBABookmarked
     else {
         return OBABookmarkedRouteReuseIdentifierError;
     }
+}
+
+- (NSString*)description {
+    return [self oba_description:@[@"bookmark", @"attributedTopLine", @"attributedMiddleLine", @"attributedBottomLine"]];
 }
 
 @end
