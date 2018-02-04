@@ -49,7 +49,7 @@ extension TodayViewController: NCWidgetProviding {
             return
         }
 
-        self.sections = [buildTableSection(group: self.group)]
+        self.sections = [buildLastUpdatedSection(), buildTableSection(group: self.group)]
         self.tableView.reloadData()
 
         let promises: [Promise<Any>] = self.group.bookmarks.flatMap { self.promiseStop(bookmark: $0) }
@@ -67,7 +67,19 @@ extension TodayViewController: NCWidgetProviding {
     }
 }
 
-// MARK: - UI Construction
+// MARK: - Last Updated Section
+extension TodayViewController {
+    func buildLastUpdatedSection() -> OBATableSection {
+        let tableSection = OBATableSection.init()
+
+        let row = OBATableRow.init(title: "Last updated: ???", action: nil)
+        tableSection.addRow(row)
+
+        return tableSection
+    }
+}
+
+// MARK: - Dynamic UI Construction
 extension TodayViewController {
     func buildTableSection(group: OBABookmarkGroup) -> OBATableSection {
         let tableSection = OBATableSection.init()
