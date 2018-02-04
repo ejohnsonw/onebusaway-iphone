@@ -62,6 +62,8 @@
         _thirdDepartureLabel.font = [OBATheme footnoteFont];
         [_thirdDepartureLabel setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
 
+        UIView *spacer = [UIView new];
+
         _contextMenuButton = [OBAUIBuilder contextMenuButton];
 
         if (kUseDebugColors) {
@@ -82,7 +84,7 @@
         labelStack.distribution = UIStackViewDistributionFill;
         labelStack.spacing = 0;
 
-        UIStackView *departureLabelStack = [[UIStackView alloc] initWithArrangedSubviews:@[_firstDepartureLabel, _secondDepartureLabel, _thirdDepartureLabel]];
+        UIStackView *departureLabelStack = [[UIStackView alloc] initWithArrangedSubviews:@[_firstDepartureLabel, _secondDepartureLabel, _thirdDepartureLabel, spacer]];
         departureLabelStack.axis = UILayoutConstraintAxisVertical;
         departureLabelStack.distribution = UIStackViewDistributionFill;
         departureLabelStack.spacing = OBATheme.compactPadding;
