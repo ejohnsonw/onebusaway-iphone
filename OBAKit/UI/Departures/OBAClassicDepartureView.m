@@ -28,7 +28,7 @@
 @property(nonatomic,strong,readwrite) OBADepartureTimeLabel *firstDepartureLabel;
 @property(nonatomic,strong,readwrite) OBADepartureTimeLabel *secondDepartureLabel;
 @property(nonatomic,strong,readwrite) OBADepartureTimeLabel *thirdDepartureLabel;
-
+@property(nonatomic,strong) UIView *departureLabelSpacer;
 @end
 
 @implementation OBAClassicDepartureView
@@ -62,7 +62,7 @@
         _thirdDepartureLabel.font = [OBATheme footnoteFont];
         [_thirdDepartureLabel setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
 
-        UIView *spacer = [UIView new];
+        _departureLabelSpacer = [UIView new];
 
         _contextMenuButton = [OBAUIBuilder contextMenuButton];
 
@@ -84,7 +84,7 @@
         labelStack.distribution = UIStackViewDistributionFill;
         labelStack.spacing = 0;
 
-        UIStackView *departureLabelStack = [[UIStackView alloc] initWithArrangedSubviews:@[_firstDepartureLabel, _secondDepartureLabel, _thirdDepartureLabel, spacer]];
+        UIStackView *departureLabelStack = [[UIStackView alloc] initWithArrangedSubviews:@[_firstDepartureLabel, _secondDepartureLabel, _thirdDepartureLabel, _departureLabelSpacer]];
         departureLabelStack.axis = UILayoutConstraintAxisVertical;
         departureLabelStack.distribution = UIStackViewDistributionFill;
         departureLabelStack.spacing = OBATheme.compactPadding;
@@ -150,6 +150,10 @@
     [self applyUpcomingDeparture:[self departureRow].upcomingDepartures atIndex:0 toLabel:self.firstDepartureLabel];
     [self applyUpcomingDeparture:[self departureRow].upcomingDepartures atIndex:1 toLabel:self.secondDepartureLabel];
     [self applyUpcomingDeparture:[self departureRow].upcomingDepartures atIndex:2 toLabel:self.thirdDepartureLabel];
+
+    // vertically center the one departure label if there is only one departure.
+    // Otherwise vertically align them to the top.
+    self.departureLabelSpacer.hidden = [self departureRow].upcomingDepartures.count == 1;
 }
 
 - (void)applyUpcomingDeparture:(NSArray<OBAUpcomingDeparture*>*)upcomingDepartures atIndex:(NSUInteger)index toLabel:(OBADepartureTimeLabel*)departureTimeLabel {
