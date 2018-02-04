@@ -79,7 +79,7 @@
             _contextMenuButton.backgroundColor = [UIColor yellowColor];
         }
 
-        UIStackView *labelStack = [[UIStackView alloc] initWithArrangedSubviews:@[_topLineLabel, _middleLineLabel, _bottomLineLabel]];
+        UIStackView *labelStack = [[UIStackView alloc] initWithArrangedSubviews:@[_topLineLabel, _middleLineLabel, _bottomLineLabel, [UIView new]]];
         labelStack.axis = UILayoutConstraintAxisVertical;
         labelStack.distribution = UIStackViewDistributionFill;
         labelStack.spacing = 0;
